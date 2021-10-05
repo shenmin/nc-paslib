@@ -51,8 +51,8 @@ type
         procedure run(const proc_method : TThreadMethod; const after_ms : UInt64); overload;
 
         procedure cancel(); overload;
-        procedure cancel(const proc_method : TThreadMethod); overload;
         procedure cancel(const proc : TProcedure); overload;
+        procedure cancel(const proc_method : TThreadMethod); overload;
 
         procedure begin_disable();
         procedure end_disable();

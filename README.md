@@ -4,15 +4,15 @@ A base utilities library for Pascal (Delphi/Free Pascal/Lazarus)
 
 ## TncThread - a utility class for threading
 
-    class procedure dispatch_to_main_thread(const ThreadProc: TProcedure); overload;
-    class procedure dispatch_to_main_thread(const ThreadProc: TThreadMethod); overload;
+    class procedure dispatch_to_main_thread(const proc : TProcedure); overload;
+    class procedure dispatch_to_main_thread(const proc_method : TThreadMethod); overload;
 
 Dispatches the execution of a method or a procedure call to the main thread queue.
 
 
 
-    class procedure ensure_in_main_thread(const ThreadProc: TProcedure); overload;
-    class procedure ensure_in_main_thread(const ThreadProc: TThreadMethod); overload;
+    class procedure ensure_in_main_thread(const proc : TProcedure); overload;
+    class procedure ensure_in_main_thread(const proc_method : TThreadMethod); overload;
 
 Ensures the execution of a method or a procedure call within the main thread. If the current thread is the main thread, the method or the procedure will be executed directly without queuing.
 
@@ -28,8 +28,8 @@ Executes a method or a procedure **in the main thread** after a delay (milliseco
 
 
     procedure cancel(); overload;
-    procedure cancel(const proc_method : TThreadMethod); overload;
     procedure cancel(const proc : TProcedure); overload;
+    procedure cancel(const proc_method : TThreadMethod); overload;
 
 Cancels the execution of a specified method/procedure or all methods/procedures in the delay queue.
 

@@ -29,12 +29,12 @@ type
 
     TncThread = class(TThread)
     public
-        class procedure dispatch_to_main_thread(const ThreadProc: TProcedure); overload;
-        class procedure dispatch_to_main_thread(const ThreadProc: TThreadMethod); overload;
-        class procedure ensure_in_main_thread(const ThreadProc: TProcedure); overload;
-        class procedure ensure_in_main_thread(const ThreadProc: TThreadMethod); overload;
+        class procedure dispatch_to_main_thread(const proc: TProcedure); overload;
+        class procedure dispatch_to_main_thread(const proc_method: TThreadMethod); overload;
+        class procedure ensure_in_main_thread(const proc: TProcedure); overload;
+        class procedure ensure_in_main_thread(const proc_method: TThreadMethod); overload;
 
-        class function execute_in_thread(const ThreadProc: TProc; const AOnTerminate : TNotifyEvent = nil) : TThread;
+        class function execute_in_thread(const proc: TProc; const AOnTerminate : TNotifyEvent = nil) : TThread;
 
         class function is_in_main_thread() : Boolean;
 
@@ -85,43 +85,43 @@ end;
 
 { TncThread }
 
-class procedure TncThread.dispatch_to_main_thread(const ThreadProc : TProcedure);
+class procedure TncThread.dispatch_to_main_thread(const proc : TProcedure);
 begin
-    TncInternalRunInMainThread.Create(ThreadProc);
+    TncInternalRunInMainThread.Create(proc);
 end;
 
-class procedure TncThread.dispatch_to_main_thread(const ThreadProc : TThreadMethod);
+class procedure TncThread.dispatch_to_main_thread(const proc_method : TThreadMethod);
 begin
-    ForceQueue(nil, ThreadProc);
+    ForceQueue(nil, proc_method);
 end;
 
-class procedure TncThread.ensure_in_main_thread(const ThreadProc : TProcedure);
+class procedure TncThread.ensure_in_main_thread(const proc : TProcedure);
 begin
     if is_in_main_thread() then
     begin
-        ThreadProc();
+        proc();
     end
     else
     begin
-        dispatch_to_main_thread(ThreadProc);
+        dispatch_to_main_thread(proc);
     end;
 end;
 
-class procedure TncThread.ensure_in_main_thread(const ThreadProc : TThreadMethod);
+class procedure TncThread.ensure_in_main_thread(const proc_method : TThreadMethod);
 begin
     if is_in_main_thread() then
     begin
-        ThreadProc();
+        proc_method();
     end
     else
     begin
-        Synchronize(nil, ThreadProc);
+        Synchronize(nil, proc_method);
     end;
 end;
 
-class function TncThread.execute_in_thread(const ThreadProc: TProc; const AOnTerminate: TNotifyEvent): TThread;
+class function TncThread.execute_in_thread(const proc: TProc; const AOnTerminate: TNotifyEvent): TThread;
 begin
-    Result := TThread.CreateAnonymousThread(ThreadProc);
+    Result := TThread.CreateAnonymousThread(proc);
     Result.OnTerminate := AOnTerminate;
     Result.Start();
 end;
