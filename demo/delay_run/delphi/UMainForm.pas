@@ -40,8 +40,6 @@ type
   private
     procedure do_show_msg();
 
-    procedure delay_method_in_thread();
-    procedure delay_proc_in_thread();
   public
     { Public declarations }
   end;
@@ -92,24 +90,24 @@ end;
 
 procedure TMainForm.Button7Click(Sender: TObject);
 begin
-    TncThread.execute_in_thread(delay_method_in_thread);
+    TncThread.execute_in_thread(
+    procedure
+    begin
+        shared_delay().cancel();
+        shared_delay().run(do_show_msg, 1000);
+    end
+    );
 end;
 
 procedure TMainForm.Button8Click(Sender: TObject);
 begin
-    TncThread.execute_in_thread(delay_proc_in_thread);
-end;
-
-procedure TMainForm.delay_method_in_thread;
-begin
-    shared_delay().cancel();
-    shared_delay().run(do_show_msg, 1000);
-end;
-
-procedure TMainForm.delay_proc_in_thread;
-begin
-    shared_delay().cancel();
-    shared_delay().run(do_show_msg_proc, 1000);
+    TncThread.execute_in_thread(
+    procedure
+    begin
+        shared_delay().cancel();
+        shared_delay().run(do_show_msg_proc, 1000);
+    end
+    );
 end;
 
 procedure TMainForm.do_show_msg;
