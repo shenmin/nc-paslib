@@ -40,3 +40,42 @@ Cancels the execution of a specified method/procedure or all methods/procedures 
 
 Temporarily not accepts any delay run request between `begin_disable()` and `end_disable()`.
 
+
+## TncAnimateGroup - run animations in sequence for a single control
+
+    constructor Create(const control : TControl); reintroduce;
+
+The constructor's parameter specifies the control to perform the animation on
+
+
+
+    procedure add_size_animate(const w, h : Integer; const keep_center : Boolean; const duration : Cardinal);
+    procedure add_expand_to_left_animate(const w : Integer; const duration : Cardinal);
+    procedure add_move_animate(const x, y : Integer; const duration : Cardinal);
+    procedure add_change_animate(const x, y, w, h : Integer; const duration : Cardinal);
+
+Add animation effects for each step, supporting changes in size, expansion to the left, movement, and changes (in size and position).
+
+
+    procedure run(); overload;
+    procedure run(const progress_callback : TncAnimateProgressEvent); overload;
+
+Start executing the animations.
+
+## TncAnimateAsyncGroup - run animations asynchronously (simultaneously) for multiple controls
+
+    procedure add_size_animate(const control : TControl; const w, h : Integer; const keep_center : Boolean; const duration : Cardinal);
+    procedure add_expand_to_left_animate(const control : TControl; const w : Integer; const duration : Cardinal);
+    procedure add_move_animate(const control : TControl; const x, y : Integer; const duration : Cardinal);
+    procedure add_change_animate(const control : TControl; const x, y, w, h : Integer; const duration : Cardinal);
+
+Add animation effects, supporting changes in size, expansion to the left, movement, and changes (in size and position).
+
+    procedure add_alpha_animate(const form : TForm; const a : Integer; const duration : Cardinal);
+
+Add animation effect for changing form's alpha value.
+
+    procedure run(); overload;
+    procedure run(const progress_callback : TncAnimateProgressEvent); overload;
+
+Start executing the animations.
