@@ -236,6 +236,8 @@ var
     i : Integer;
     c : Int64;
     item : PTncDelayRec;
+    proc : TProcedure;
+    proc_method : TThreadMethod;
 begin
     EnterCriticalSection(m_cs);
 
@@ -255,12 +257,14 @@ begin
 
                 if Assigned(item.proc) then
                 begin
-                    TncThread.dispatch_to_main_thread(item.proc);
+                    proc := item.proc;
+                    TncThread.dispatch_to_main_thread(proc);
                     Dispose(item);
                 end
                 else if Assigned(item.proc_method) then
                 begin
-                    TncThread.dispatch_to_main_thread(item.proc_method);
+                    proc_method := item.proc_method;
+                    TncThread.dispatch_to_main_thread(proc_method);
                     Dispose(item);
                 end;
             end
