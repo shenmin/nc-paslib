@@ -1,5 +1,5 @@
 # nc-paslib
-A base utilities library for Pascal (Delphi/Free Pascal/Lazarus)
+A (non-GUI) base utilities library for Pascal (Delphi/Free Pascal/Lazarus).
 
 
 ## TncThread - a utility class for threading
@@ -45,7 +45,7 @@ Temporarily not accepts any delay run request between `begin_disable()` and `end
 
     constructor Create(const control : TControl); reintroduce;
 
-The constructor's parameter specifies the control to perform the animation on
+The constructor's parameter specifies the control to perform the animation on.
 
 
 
