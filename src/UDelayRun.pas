@@ -25,6 +25,7 @@ type
         run_time : Int64;
         proc : TProcedure;
         proc_method : TThreadMethod;
+        cancelled : Boolean;
     end;
     PTncDelayRec = ^TncDelayRec;
 
@@ -35,13 +36,17 @@ type
         m_cs : TRTLCriticalSection;
         m_runlist : TList;
         m_timer : TTimer;
-        m_canceled : Boolean;
+        m_processing_cancelling : Boolean;
         m_running : Boolean;
         m_disabled : Boolean;
 
         procedure enable_timer();
+        procedure disable_timer();
 
         procedure on_timer(Sender : TObject);
+
+        procedure do_proc(const proc : TProcedure);
+        procedure do_proc_method(const proc_method : TThreadMethod);
 
     public
         constructor Create();
@@ -99,7 +104,7 @@ var
 begin
     EnterCriticalSection(m_cs);
 
-    m_canceled := true;
+    m_processing_cancelling := true;
 
     for i := 0 to m_runlist.Count - 1 do
     begin
@@ -109,7 +114,9 @@ begin
 
     m_runlist.Clear();
 
-    m_canceled := false;
+    m_processing_cancelling := false;
+
+    TncThread.ensure_in_main_thread(disable_timer);
 
     LeaveCriticalSection(m_cs);
 end;
@@ -130,7 +137,7 @@ var
 begin
     EnterCriticalSection(m_cs);
 
-    m_canceled := true;
+    m_processing_cancelling := true;
 
     for i := 0 to m_runlist.Count - 1 do
     begin
@@ -138,13 +145,11 @@ begin
 
         if @item.proc_method = @proc_method then
         begin
-            m_runlist.Remove(item);
-            Dispose(item);
-            Break;
+            item.cancelled := true;
         end;
     end;
 
-    m_canceled := false;
+    m_processing_cancelling := false;
 
     LeaveCriticalSection(m_cs);
 end;
@@ -156,7 +161,7 @@ var
 begin
     EnterCriticalSection(m_cs);
 
-    m_canceled := true;
+    m_processing_cancelling := true;
 
     for i := 0 to m_runlist.Count - 1 do
     begin
@@ -164,13 +169,11 @@ begin
 
         if @item.proc = @proc then
         begin
-            m_runlist.Remove(item);
-            Dispose(item);
-            Break;
+            item.cancelled := true;
         end;
     end;
 
-    m_canceled := false;
+    m_processing_cancelling := false;
 
     LeaveCriticalSection(m_cs);
 end;
@@ -217,6 +220,27 @@ begin
     inherited;
 end;
 
+procedure TncDelay.disable_timer;
+begin
+    m_timer.Enabled := false;
+end;
+
+procedure TncDelay.do_proc(const proc: TProcedure);
+var
+    local_proc : TProcedure;
+begin
+    local_proc := proc;
+    TncThread.dispatch_to_main_thread(local_proc);
+end;
+
+procedure TncDelay.do_proc_method(const proc_method: TThreadMethod);
+var
+    local_proc_method : TThreadMethod;
+begin
+    local_proc_method := proc_method;
+    TncThread.dispatch_to_main_thread(local_proc_method);
+end;
+
 procedure TncDelay.end_disable();
 begin
     EnterCriticalSection(m_cs);
@@ -236,12 +260,10 @@ var
     i : Integer;
     c : Int64;
     item : PTncDelayRec;
-    proc : TProcedure;
-    proc_method : TThreadMethod;
 begin
     EnterCriticalSection(m_cs);
 
-    if (not m_canceled) and (not m_running) and (not m_disabled) then
+    if (not m_processing_cancelling) and (not m_running) and (not m_disabled) then
     begin
         m_running := true;
 
@@ -251,20 +273,26 @@ begin
         while i < m_runlist.Count do
         begin
             item := m_runlist[i];
-            if c >= item.run_time then
+            if (c >= item.run_time) or item.cancelled then
             begin
                 m_runlist.Delete(i);
 
-                if Assigned(item.proc) then
+                if item.cancelled then
                 begin
-                    proc := item.proc;
-                    TncThread.dispatch_to_main_thread(proc);
+                    Dispose(item);
+                end
+                else if Assigned(item.proc) then
+                begin
+                    do_proc(item.proc);
                     Dispose(item);
                 end
                 else if Assigned(item.proc_method) then
                 begin
-                    proc_method := item.proc_method;
-                    TncThread.dispatch_to_main_thread(proc_method);
+                    do_proc_method(item.proc_method);
+                    Dispose(item);
+                end
+                else
+                begin
                     Dispose(item);
                 end;
             end
@@ -298,6 +326,7 @@ begin
         item.run_time := GetTickCount64() + after_ms;
         item.proc := proc;
         item.proc_method := nil;
+        item.cancelled := false;
 
         m_runlist.Add(item);
         TncThread.ensure_in_main_thread(enable_timer);
@@ -319,6 +348,7 @@ begin
         item.run_time := GetTickCount64() + after_ms;
         item.proc := nil;
         item.proc_method := proc_method;
+        item.cancelled := false;
 
         m_runlist.Add(item);
         TncThread.ensure_in_main_thread(enable_timer);
